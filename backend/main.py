@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from datetime import date as date_type, datetime
 from fastapi import FastAPI, HTTPException, Query
@@ -155,8 +156,8 @@ def get_games(date: str = Query(default=None)):
         data = resp.json()
     except requests.Timeout:
         raise HTTPException(status_code=504, detail="ESPN API timed out")
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"ESPN API error: {e}")
+    except Exception:
+        raise HTTPException(status_code=502, detail="Failed to fetch games")
 
     result = []
     for event in data.get("events", []):
@@ -196,14 +197,16 @@ def get_games(date: str = Query(default=None)):
 
 @app.get("/boxscore/{game_id}")
 def get_boxscore(game_id: str):
+    if not re.fullmatch(r"\d{1,12}", game_id):
+        raise HTTPException(status_code=400, detail="Invalid game ID")
     try:
         resp = requests.get(f"{ESPN}/summary", params={"event": game_id}, timeout=15)
         resp.raise_for_status()
         data = resp.json()
     except requests.Timeout:
         raise HTTPException(status_code=504, detail="ESPN API timed out")
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"ESPN API error: {e}")
+    except Exception:
+        raise HTTPException(status_code=502, detail="Failed to fetch box score")
 
     header = data.get("header", {})
     header_comp = (header.get("competitions") or [{}])[0]
