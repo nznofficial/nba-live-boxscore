@@ -291,6 +291,16 @@ function QuarterStrip({ game }) {
   );
 }
 
+function TeamLogo({ tricode, size }) {
+  return (
+    <img
+      src={`https://a.espncdn.com/i/teamlogos/nba/500/${tricode.toLowerCase()}.png`}
+      alt={tricode}
+      style={{ width: size, height: size, objectFit: "contain" }}
+    />
+  );
+}
+
 function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
   const isLive  = game.game_status === 2;
   const isFinal = game.game_status === 3;
@@ -298,6 +308,7 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
   const homeWins = isFinal && game.home_score > game.away_score;
   const awayColor = game.away_color || "#1e2d3d";
   const homeColor = game.home_color || "#1e2d3d";
+  const logoSize  = isMobile ? 36 : 48;
 
   const sideStyle = (side) => ({
     ...S.teamSide,
@@ -314,6 +325,7 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
     }}>
       <div style={S.scoreRow}>
         <div style={sideStyle("away")} onClick={() => onSideSelect("away")}>
+          <TeamLogo tricode={game.away_team} size={logoSize} />
           <span style={{
             ...S.tricode,
             borderBottom: selectedSide === "away" ? "1px solid var(--accent)" : "1px solid transparent",
@@ -345,7 +357,8 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
 
         <div style={{ ...S.divider, height: isMobile ? 32 : 44 }} />
 
-        <div style={{ ...sideStyle("home"), textAlign: "right" }} onClick={() => onSideSelect("home")}>
+        <div style={{ ...sideStyle("home"), textAlign: "right", alignItems: "flex-end" }} onClick={() => onSideSelect("home")}>
+          <TeamLogo tricode={game.home_team} size={logoSize} />
           <span style={{
             ...S.tricode,
             borderBottom: selectedSide === "home" ? "1px solid var(--accent)" : "1px solid transparent",
