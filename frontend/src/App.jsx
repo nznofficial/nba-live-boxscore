@@ -436,12 +436,12 @@ const S = {
     border: "1px solid", transition: "all 0.2s ease",
   },
   mainOuter: {
-    flex: 1, overflow: "hidden",
+    flex: 1, minHeight: 0,
     display: "flex", justifyContent: "center",
-    padding: "0 24px",
+    padding: "0 24px", overflow: "hidden",
   },
   mainInner: {
-    maxWidth: 1100, width: "100%",
+    maxWidth: 1100, width: "100%", flex: 1, minHeight: 0,
     display: "flex", flexDirection: "column",
     paddingTop: 24,
   },
@@ -453,7 +453,7 @@ const S = {
     flexShrink: 0,
   },
   panel: {
-    flex: 1, overflowY: "auto",
+    flex: 1, minHeight: 0, overflowY: "auto",
     border: "1px solid var(--border-color)",
     borderTop: "none", borderBottomLeftRadius: 8, borderBottomRightRadius: 8,
     background: "var(--bg-panel)", padding: "24px 24px 0",
