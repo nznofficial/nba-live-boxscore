@@ -89,6 +89,7 @@ export default function App() {
   const [selectedSide, setSelectedSide] = useState("away");
   const [useMock, setUseMock] = useState(false);
   const [seriesData, setSeriesData] = useState(null);
+  const [activeView, setActiveView] = useState("boxscore");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -104,7 +105,7 @@ export default function App() {
   const showPregame   = selectedGame && selectedGame.game_status === 1 && !effectiveMock;
 
   useEffect(() => { applyTheme(THEMES[activeTheme]); }, [activeTheme]);
-  useEffect(() => { setSelectedSide("away"); setSeriesData(null); }, [selectedId]);
+  useEffect(() => { setSelectedSide("away"); setSeriesData(null); setActiveView("boxscore"); }, [selectedId]);
 
   const selectTheme = (key) => {
     setActiveTheme(key);
@@ -225,6 +226,8 @@ export default function App() {
                 onSideSelect={setSelectedSide}
                 isMobile={isMobile}
                 seriesData={seriesData}
+                activeView={activeView}
+                onViewToggle={() => setActiveView(v => v === "series" ? "boxscore" : "series")}
               />
 
               {showPregame && (
@@ -242,12 +245,16 @@ export default function App() {
 
               {showBoxScore && (
                 <div style={S.panel}>
-                  <BoxScore
-                    gameId={effectiveMock ? "mock" : selectedGame.game_id}
-                    selectedSide={selectedSide}
-                    isMobile={isMobile}
-                    onData={(d) => setSeriesData(d.seasonseries?.length ? d.seasonseries : null)}
-                  />
+                  {activeView === "series" && seriesData ? (
+                    <SeriesView seasonseries={seriesData} isMobile={isMobile} />
+                  ) : (
+                    <BoxScore
+                      gameId={effectiveMock ? "mock" : selectedGame.game_id}
+                      selectedSide={selectedSide}
+                      isMobile={isMobile}
+                      onData={(d) => setSeriesData(d.seasonseries?.length ? d.seasonseries : null)}
+                    />
+                  )}
                 </div>
               )}
             </>
@@ -311,7 +318,7 @@ function TeamLogo({ tricode, size }) {
   );
 }
 
-function ScoreHeader({ game, selectedSide, onSideSelect, isMobile, seriesData }) {
+function ScoreHeader({ game, selectedSide, onSideSelect, isMobile, seriesData, activeView, onViewToggle }) {
   const isLive  = game.game_status === 2;
   const isFinal = game.game_status === 3;
   const awayWins = isFinal && game.away_score > game.home_score;
@@ -322,6 +329,7 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile, seriesData })
   const seriesSummary = seriesData?.find(s => s.type === "playoff")?.summary
     || seriesData?.find(s => s.type === "season")?.summary
     || null;
+  const isSeriesActive = activeView === "series";
 
   const sideStyle = (side) => ({
     flex: 1,
@@ -369,19 +377,36 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile, seriesData })
 
         <div style={{ ...S.divider, height: isMobile ? 32 : 44 }} />
 
-        <div style={S.statusCol}>
+        <div
+          style={{
+            ...S.statusCol,
+            ...(seriesData ? {
+              cursor: "pointer",
+              borderRadius: 8,
+              padding: "6px 14px",
+              border: `1px solid ${isSeriesActive ? "rgba(var(--accent-rgb), 0.4)" : "transparent"}`,
+              background: isSeriesActive ? "rgba(var(--accent-rgb), 0.07)" : "transparent",
+              transition: "all 0.2s ease",
+            } : {}),
+          }}
+          onClick={() => seriesData && onViewToggle()}
+        >
           {isLive && <span className="live-dot" />}
           <span style={{
             ...S.statusLabel,
-            color: isLive ? "var(--live-color)" : isFinal ? "var(--text-dim)" : "var(--text-secondary)",
+            color: isSeriesActive ? "var(--accent)"
+              : isLive ? "var(--live-color)"
+              : isFinal ? "var(--text-dim)"
+              : "var(--text-secondary)",
             letterSpacing: isLive ? 2 : 1,
           }}>
-            {isLive ? "LIVE" : game.status}
+            {isSeriesActive ? "HISTORY" : isLive ? "LIVE" : game.status}
           </span>
           {seriesSummary && (
             <span style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 9, letterSpacing: 1, color: "var(--text-dim)",
+              fontSize: 9, letterSpacing: 1,
+              color: isSeriesActive ? "var(--accent)" : "var(--text-dim)",
               textAlign: "center", lineHeight: 1.4,
             }}>
               {seriesSummary}
@@ -418,68 +443,89 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile, seriesData })
       </div>
 
       {(game.away_linescore?.length ?? 0) > 0 && <QuarterStrip game={game} />}
-      <SeriesHistory seasonseries={seriesData} />
     </div>
   );
 }
 
-function SeriesHistory({ seasonseries }) {
-  if (!seasonseries?.length) return null;
+function SeriesView({ seasonseries, isMobile }) {
+  if (!seasonseries?.length) return (
+    <p style={{ textAlign: "center", color: "var(--text-dim)", padding: 40 }}>No series data available.</p>
+  );
 
   const sorted = [...seasonseries].sort((a, b) =>
     a.type === "playoff" ? -1 : b.type === "playoff" ? 1 : 0
   );
 
   return (
-    <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
+    <div style={{
+      padding: isMobile ? "20px 16px" : "28px 32px",
+      display: "flex", flexDirection: isMobile ? "column" : "row",
+      gap: isMobile ? 32 : 48, alignItems: "flex-start",
+    }}>
       {sorted.map((series, si) => (
-        <div key={si} style={{ marginBottom: si < sorted.length - 1 ? 16 : 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 7 }}>
-            <span style={SH.typeLabel}>{series.type === "playoff" ? "PLAYOFFS" : "REG SEASON"}</span>
-            <span style={SH.summaryLabel}>{series.summary}</span>
-          </div>
-          <table style={SH.table}>
-            <tbody>
-              {series.events.map((ev, gi) => {
-                const date = ev.date
-                  ? new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                  : "";
-                const awayWins = ev.winner === ev.away_team;
-                const homeWins = ev.winner === ev.home_team;
-                return (
-                  <tr key={gi}>
-                    {series.type === "playoff" && (
-                      <td style={SH.tdGame}>G{gi + 1}</td>
-                    )}
-                    <td style={SH.tdDate}>{date}</td>
-                    {ev.is_final ? (
-                      <>
-                        <td style={{ ...SH.tdTeam, color: awayWins ? "var(--text-primary)" : "var(--text-dim)", fontWeight: awayWins ? 700 : 400 }}>
-                          {ev.away_team}
-                        </td>
-                        <td style={{ ...SH.tdScore, color: awayWins ? "var(--accent)" : "var(--text-mono)" }}>
-                          {ev.away_score}
-                        </td>
-                        <td style={SH.tdDash}>–</td>
-                        <td style={{ ...SH.tdScore, color: homeWins ? "var(--accent)" : "var(--text-mono)" }}>
-                          {ev.home_score}
-                        </td>
-                        <td style={{ ...SH.tdTeam, color: homeWins ? "var(--text-primary)" : "var(--text-dim)", fontWeight: homeWins ? 700 : 400 }}>
-                          {ev.home_team}
-                        </td>
-                      </>
-                    ) : (
-                      <td colSpan={5} style={SH.tdScheduled}>
-                        {ev.away_team} @ {ev.home_team} &nbsp;·&nbsp; {ev.status}
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <SeriesTable key={si} series={series} />
       ))}
+    </div>
+  );
+}
+
+function SeriesTable({ series }) {
+  const isPlayoff = series.type === "playoff";
+  return (
+    <div style={{ flex: 1 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 14 }}>
+        <span style={SH.typeLabel}>{isPlayoff ? "PLAYOFFS" : "REG SEASON"}</span>
+        <span style={SH.summaryLabel}>{series.summary}</span>
+      </div>
+      <table style={{ borderCollapse: "collapse", width: "100%" }}>
+        <thead>
+          <tr>
+            {isPlayoff && <th style={SH.th} />}
+            <th style={SH.th}>DATE</th>
+            <th style={{ ...SH.th, textAlign: "left", paddingLeft: 8 }}>AWAY</th>
+            <th style={SH.th} />
+            <th style={{ ...SH.th, textAlign: "right", paddingRight: 8 }}>HOME</th>
+          </tr>
+        </thead>
+        <tbody>
+          {series.events.map((ev, gi) => {
+            const date = ev.date
+              ? new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+              : "";
+            const awayWins = ev.winner === ev.away_team;
+            const homeWins = ev.winner === ev.home_team;
+            const rowBg = gi % 2 === 0 ? "var(--bg-card-alt)" : "var(--bg-card)";
+            return (
+              <tr key={gi} className="stat-row" style={{ background: rowBg }}>
+                {isPlayoff && <td style={SH.tdGame}>G{gi + 1}</td>}
+                <td style={SH.tdDate}>{date}</td>
+                {ev.is_final ? (
+                  <>
+                    <td style={{ ...SH.tdTeam, color: awayWins ? "var(--text-primary)" : "var(--text-dim)", fontWeight: awayWins ? 700 : 400 }}>
+                      {ev.away_team}
+                      <span style={{ ...SH.tdScoreInline, color: awayWins ? "var(--accent)" : "var(--text-mono)" }}>
+                        {ev.away_score}
+                      </span>
+                    </td>
+                    <td style={SH.tdDash}>–</td>
+                    <td style={{ ...SH.tdTeamRight, color: homeWins ? "var(--text-primary)" : "var(--text-dim)", fontWeight: homeWins ? 700 : 400 }}>
+                      <span style={{ ...SH.tdScoreInline, color: homeWins ? "var(--accent)" : "var(--text-mono)" }}>
+                        {ev.home_score}
+                      </span>
+                      {ev.home_team}
+                    </td>
+                  </>
+                ) : (
+                  <td colSpan={3} style={SH.tdScheduled}>
+                    {ev.away_team} @ {ev.home_team}
+                    <span style={{ color: "var(--text-dim)", marginLeft: 8 }}>{ev.status}</span>
+                  </td>
+                )}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -487,40 +533,51 @@ function SeriesHistory({ seasonseries }) {
 const SH = {
   typeLabel: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 8, letterSpacing: 2.5, color: "var(--yellow)", textTransform: "uppercase",
+    fontSize: 8, letterSpacing: 2.5, color: "var(--yellow)",
   },
   summaryLabel: {
     fontFamily: "'Barlow Condensed', sans-serif",
-    fontSize: 13, color: "var(--text-secondary)", letterSpacing: 1,
+    fontSize: 14, color: "var(--text-secondary)", letterSpacing: 1,
   },
-  table: { borderCollapse: "collapse" },
+  th: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 9, letterSpacing: 1.5, color: "var(--yellow)",
+    textAlign: "center", paddingBottom: 8, fontWeight: 400,
+    borderBottom: "1px solid var(--border-color)",
+  },
   tdGame: {
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: 9, color: "var(--text-dim)", letterSpacing: 1,
-    paddingRight: 10, paddingBottom: 4, width: 22,
+    padding: "10px 12px 10px 16px", width: 30,
   },
   tdDate: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 9, color: "var(--text-dim)",
-    paddingRight: 16, paddingBottom: 4, minWidth: 50,
+    fontSize: 10, color: "var(--text-dim)",
+    padding: "10px 16px 10px 8px", whiteSpace: "nowrap",
   },
   tdTeam: {
     fontFamily: "'Barlow Condensed', sans-serif",
-    fontSize: 13, letterSpacing: 1, paddingBottom: 4, paddingRight: 6,
+    fontSize: 14, letterSpacing: 1,
+    padding: "10px 8px", display: "flex", alignItems: "center", gap: 10,
   },
-  tdScore: {
+  tdTeamRight: {
+    fontFamily: "'Barlow Condensed', sans-serif",
+    fontSize: 14, letterSpacing: 1, textAlign: "right",
+    padding: "10px 16px 10px 8px",
+  },
+  tdScoreInline: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 12, paddingBottom: 4, paddingRight: 2,
-    textAlign: "right", minWidth: 26,
+    fontSize: 13, display: "inline-block", minWidth: 28, textAlign: "center",
   },
   tdDash: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10, color: "var(--border-color)",
-    paddingBottom: 4, paddingLeft: 2, paddingRight: 6,
+    fontSize: 11, color: "var(--border-color)",
+    padding: "10px 4px", textAlign: "center",
   },
   tdScheduled: {
     fontFamily: "'Barlow Condensed', sans-serif",
-    fontSize: 12, color: "var(--text-dim)", letterSpacing: 0.5, paddingBottom: 4,
+    fontSize: 13, color: "var(--text-secondary)", letterSpacing: 0.5,
+    padding: "10px 8px",
   },
 };
 
