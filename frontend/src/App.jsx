@@ -190,7 +190,7 @@ export default function App() {
                 ))}
               </select>
             )}
-            {lastUpdated && (
+            {lastUpdated && !isMobile && (
               <span className="yellow-glow" style={S.updated}>Updated {lastUpdated}</span>
             )}
           </div>
@@ -353,103 +353,164 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile, seriesData, a
     userSelect: "none",
   });
 
+  const statusContent = (
+    <>
+      {isLive && <span className="live-dot" />}
+      <span style={{
+        ...S.statusLabel,
+        color: isSeriesActive ? "var(--accent)"
+          : isLive ? "var(--live-color)"
+          : isFinal ? "var(--text-dim)"
+          : "var(--text-secondary)",
+        letterSpacing: isLive ? 2 : 1,
+      }}>
+        {isSeriesActive ? "HISTORY" : isLive ? "LIVE" : game.status}
+      </span>
+      {seriesSummary && (
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 9, letterSpacing: 1,
+          color: isSeriesActive ? "var(--accent)" : "var(--text-dim)",
+          textAlign: "center", lineHeight: 1.4,
+        }}>
+          {seriesSummary}
+        </span>
+      )}
+    </>
+  );
+
+  const statusInteractiveStyle = seriesData ? {
+    cursor: "pointer",
+    borderRadius: 8,
+    border: `1px solid ${isSeriesActive ? "rgba(var(--accent-rgb), 0.4)" : "transparent"}`,
+    background: isSeriesActive ? "rgba(var(--accent-rgb), 0.07)" : "transparent",
+    transition: "all 0.2s ease",
+  } : {};
+
   return (
     <div style={{
       ...S.scoreHeader,
+      padding: isMobile ? "12px 14px" : "18px 24px",
       background: `linear-gradient(135deg, ${awayColor}22 0%, var(--bg-card) 40%, var(--bg-card) 60%, ${homeColor}22 100%)`,
     }}>
-      <div style={S.scoreRow}>
-        {/* Away: [Logo + Name/Record] ←space→ [Score] */}
-        <div style={sideStyle("away")} onClick={() => onSideSelect("away")}>
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 14 }}>
-            <TeamLogo tricode={game.away_team} size={logoSize} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <span style={{
-                ...S.tricode,
-                borderBottom: selectedSide === "away" ? "1px solid var(--accent)" : "1px solid transparent",
-                paddingBottom: 2,
-              }}>
-                {game.away_team}
+      {isMobile ? (
+        <>
+          {/* Mobile row 1: big scores + status */}
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div
+              onClick={() => onSideSelect("away")}
+              style={{ flex: 1, display: "flex", justifyContent: "center", cursor: "pointer", opacity: selectedSide === "away" ? 1 : 0.4, transition: "opacity 0.2s" }}
+            >
+              <span
+                className={awayWins ? "neon-score-glow" : ""}
+                style={{ ...S.score, fontSize: 52, color: awayWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+              >
+                {game.away_score}
               </span>
-              {game.away_record && <span style={S.record}>{game.away_record}</span>}
+            </div>
+            <div
+              style={{ ...S.statusCol, minWidth: 66, padding: "4px 8px", flexShrink: 0, ...statusInteractiveStyle }}
+              onClick={() => seriesData && onViewToggle()}
+            >
+              {statusContent}
+            </div>
+            <div
+              onClick={() => onSideSelect("home")}
+              style={{ flex: 1, display: "flex", justifyContent: "center", cursor: "pointer", opacity: selectedSide === "home" ? 1 : 0.4, transition: "opacity 0.2s" }}
+            >
+              <span
+                className={homeWins ? "neon-score-glow" : ""}
+                style={{ ...S.score, fontSize: 52, color: homeWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+              >
+                {game.home_score}
+              </span>
             </div>
           </div>
-          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
-            <span
-              className={awayWins ? "neon-score-glow" : ""}
-              style={{ ...S.score, fontSize: isMobile ? 40 : 56, color: awayWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+          {/* Mobile row 2: team logos + names */}
+          <div style={{ display: "flex", alignItems: "center", marginTop: 10 }}>
+            <div
+              onClick={() => onSideSelect("away")}
+              style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", opacity: selectedSide === "away" ? 1 : 0.4, transition: "opacity 0.2s" }}
             >
-              {game.away_score}
-            </span>
-          </div>
-        </div>
-
-        <div style={{ ...S.divider, height: isMobile ? 32 : 44 }} />
-
-        <div
-          style={{
-            ...S.statusCol,
-            ...(seriesData ? {
-              cursor: "pointer",
-              borderRadius: 8,
-              padding: "6px 14px",
-              border: `1px solid ${isSeriesActive ? "rgba(var(--accent-rgb), 0.4)" : "transparent"}`,
-              background: isSeriesActive ? "rgba(var(--accent-rgb), 0.07)" : "transparent",
-              transition: "all 0.2s ease",
-            } : {}),
-          }}
-          onClick={() => seriesData && onViewToggle()}
-        >
-          {isLive && <span className="live-dot" />}
-          <span style={{
-            ...S.statusLabel,
-            color: isSeriesActive ? "var(--accent)"
-              : isLive ? "var(--live-color)"
-              : isFinal ? "var(--text-dim)"
-              : "var(--text-secondary)",
-            letterSpacing: isLive ? 2 : 1,
-          }}>
-            {isSeriesActive ? "HISTORY" : isLive ? "LIVE" : game.status}
-          </span>
-          {seriesSummary && (
-            <span style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 9, letterSpacing: 1,
-              color: isSeriesActive ? "var(--accent)" : "var(--text-dim)",
-              textAlign: "center", lineHeight: 1.4,
-            }}>
-              {seriesSummary}
-            </span>
-          )}
-        </div>
-
-        <div style={{ ...S.divider, height: isMobile ? 32 : 44 }} />
-
-        {/* Home: [Score] ←space→ [Name/Record + Logo] */}
-        <div style={sideStyle("home")} onClick={() => onSideSelect("home")}>
-          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
-            <span
-              className={homeWins ? "neon-score-glow" : ""}
-              style={{ ...S.score, fontSize: isMobile ? 40 : 56, color: homeWins ? "var(--score-win-color)" : "var(--text-primary)" }}
-            >
-              {game.home_score}
-            </span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 14 }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
-              <span style={{
-                ...S.tricode,
-                borderBottom: selectedSide === "home" ? "1px solid var(--accent)" : "1px solid transparent",
-                paddingBottom: 2,
-              }}>
-                {game.home_team}
-              </span>
-              {game.home_record && <span style={S.record}>{game.home_record}</span>}
+              <TeamLogo tricode={game.away_team} size={28} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ ...S.tricode, fontSize: 18, borderBottom: selectedSide === "away" ? "1px solid var(--accent)" : "1px solid transparent", paddingBottom: 2 }}>
+                  {game.away_team}
+                </span>
+                {game.away_record && <span style={S.record}>{game.away_record}</span>}
+              </div>
             </div>
-            <TeamLogo tricode={game.home_team} size={logoSize} />
+            <div style={{ minWidth: 66, flexShrink: 0 }} />
+            <div
+              onClick={() => onSideSelect("home")}
+              style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", cursor: "pointer", opacity: selectedSide === "home" ? 1 : 0.4, transition: "opacity 0.2s" }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
+                <span style={{ ...S.tricode, fontSize: 18, borderBottom: selectedSide === "home" ? "1px solid var(--accent)" : "1px solid transparent", paddingBottom: 2 }}>
+                  {game.home_team}
+                </span>
+                {game.home_record && <span style={S.record}>{game.home_record}</span>}
+              </div>
+              <TeamLogo tricode={game.home_team} size={28} />
+            </div>
+          </div>
+        </>
+      ) : (
+        <div style={S.scoreRow}>
+          {/* Away: [Logo + Name/Record] ←space→ [Score] */}
+          <div style={sideStyle("away")} onClick={() => onSideSelect("away")}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <TeamLogo tricode={game.away_team} size={logoSize} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ ...S.tricode, borderBottom: selectedSide === "away" ? "1px solid var(--accent)" : "1px solid transparent", paddingBottom: 2 }}>
+                  {game.away_team}
+                </span>
+                {game.away_record && <span style={S.record}>{game.away_record}</span>}
+              </div>
+            </div>
+            <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+              <span
+                className={awayWins ? "neon-score-glow" : ""}
+                style={{ ...S.score, fontSize: 56, color: awayWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+              >
+                {game.away_score}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ ...S.divider, height: 44 }} />
+
+          <div
+            style={{ ...S.statusCol, padding: "6px 14px", ...statusInteractiveStyle }}
+            onClick={() => seriesData && onViewToggle()}
+          >
+            {statusContent}
+          </div>
+
+          <div style={{ ...S.divider, height: 44 }} />
+
+          {/* Home: [Score] ←space→ [Name/Record + Logo] */}
+          <div style={sideStyle("home")} onClick={() => onSideSelect("home")}>
+            <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+              <span
+                className={homeWins ? "neon-score-glow" : ""}
+                style={{ ...S.score, fontSize: 56, color: homeWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+              >
+                {game.home_score}
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
+                <span style={{ ...S.tricode, borderBottom: selectedSide === "home" ? "1px solid var(--accent)" : "1px solid transparent", paddingBottom: 2 }}>
+                  {game.home_team}
+                </span>
+                {game.home_record && <span style={S.record}>{game.home_record}</span>}
+              </div>
+              <TeamLogo tricode={game.home_team} size={logoSize} />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {(game.away_linescore?.length ?? 0) > 0 && <QuarterStrip game={game} />}
     </div>
@@ -486,7 +547,8 @@ function SeriesTable({ series }) {
         <span style={SH.typeLabel}>{isPlayoff ? "PLAYOFFS" : "REG SEASON"}</span>
         <span style={SH.summaryLabel}>{series.summary}</span>
       </div>
-      <table style={{ borderCollapse: "collapse", width: "100%" }}>
+      <div style={{ overflowX: "auto" }}>
+      <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 280 }}>
         <thead>
           <tr>
             {isPlayoff && <th style={SH.th} />}
@@ -535,6 +597,7 @@ function SeriesTable({ series }) {
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
