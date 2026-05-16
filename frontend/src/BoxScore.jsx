@@ -33,9 +33,7 @@ export default function BoxScore({ gameId, selectedSide = "away", isMobile = fal
   if (error)   return <p style={{ ...S.center, color: "#ef4444" }}>{error}</p>;
 
   return (
-    <div style={S.container}>
-      <TeamTable team={selectedSide === "away" ? data.away : data.home} isMobile={isMobile} />
-    </div>
+    <TeamTable team={selectedSide === "away" ? data.away : data.home} isMobile={isMobile} />
   );
 }
 
@@ -63,108 +61,105 @@ function TeamTable({ team, isMobile = false }) {
   const { team: tricode, players, totals } = team;
 
   return (
-    <div style={S.section}>
-      <div style={S.tableWrap}>
-        <table style={{
-          ...S.table,
-          tableLayout: isMobile ? "auto" : "fixed",
-          minWidth: isMobile ? 560 : undefined,
-        }}>
-          {!isMobile && (
-          <colgroup>
-            <col style={{ width: "20%" }} />
-            <col style={{ width: "4%" }} />
-            <col style={{ width: "6%" }} />
-            <col style={{ width: "5%" }} />
-            <col style={{ width: "5%" }} />
-            <col style={{ width: "5%" }} />
-            <col style={{ width: "4%" }} />
-            <col style={{ width: "4%" }} />
-            <col style={{ width: "4%" }} />
-            <col style={{ width: "4%" }} />
-            <col style={{ width: "8%" }} />
-            <col style={{ width: "8%" }} />
-            <col style={{ width: "8%" }} />
-            <col style={{ width: "5%" }} />
-          </colgroup>
-          )}
-          <thead>
-            <tr>
-              {COLS.map((c) => (
-                <th key={c.key} style={c.left ? S.thLeft : S.th}>{c.label}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {players.map((p, i) => {
-              if (p.dnp) {
-                return (
-                  <tr key={i} className="stat-row" style={{ ...(i % 2 === 0 ? S.rowEven : S.rowOdd), opacity: 0.35 }}>
-                    <td style={S.tdName}>{p.name}</td>
-                    <td style={S.tdPos}>{p.position}</td>
-                    <td colSpan={COLS.length - 2} style={{ ...S.tdNum, letterSpacing: 2, fontSize: 10, color: "var(--text-dim)" }}>
-                      DNP
-                    </td>
-                  </tr>
-                );
-              }
-              return (
-                <tr key={i} className="stat-row" style={i % 2 === 0 ? S.rowEven : S.rowOdd}>
-                  <td style={S.tdName}>{p.name}</td>
-                  <td style={S.tdPos}>{p.position}</td>
-                  <td style={S.tdNum}>{p.minutes || "—"}</td>
-                  <td style={{
-                    ...S.tdNum,
-                    color: p.points >= 20 ? "var(--hot-stat)" : "var(--text-mono)",
-                    fontWeight: p.points >= 20 ? 600 : 400,
-                  }}>
-                    {p.points}
-                  </td>
-                  <td style={S.tdNum}>{p.rebounds}</td>
-                  <td style={S.tdNum}>{p.assists}</td>
-                  <td style={S.tdNum}>{p.steals}</td>
-                  <td style={S.tdNum}>{p.blocks}</td>
-                  <td style={S.tdNum}>{p.turnovers}</td>
-                  <td style={S.tdNum}>{p.fouls}</td>
-                  <td style={S.tdNum}><StatBar value={p.fg_pct}    color="var(--accent)"    /></td>
-                  <td style={S.tdNum}><StatBar value={p.three_pct} color="var(--yellow)"   /></td>
-                  <td style={S.tdNum}><StatBar value={p.ft_pct}    color="var(--text-mono)" /></td>
-                  <td style={S.tdNum}>
-                    <span style={{
-                      ...S.pmPill,
-                      background: p.plus_minus > 0 ? "var(--pm-pos-bg)" : p.plus_minus < 0 ? "var(--pm-neg-bg)" : "transparent",
-                      color: p.plus_minus > 0 ? "var(--pm-pos-text)" : p.plus_minus < 0 ? "var(--pm-neg-text)" : "var(--text-dim)",
-                    }}>
-                      {p.plus_minus > 0 ? `+${p.plus_minus}` : p.plus_minus}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-          {totals && (
-            <tfoot>
-              <tr>
-                <td style={{ ...S.tdName, ...S.totalsCell, ...S.stickyBottom, fontWeight: 700, letterSpacing: 2, fontSize: 11 }}>TOTALS</td>
-                <td style={{ ...S.tdPos,  ...S.totalsCell, ...S.stickyBottom }}>—</td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>—</td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom, color: "var(--text-primary)", fontWeight: 700 }}>{totals.points}</td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.rebounds}</td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.assists}</td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.steals}</td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.blocks}</td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.turnovers}</td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.fouls}</td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}><StatBar value={totals.fg_pct}    color="var(--accent)"    /></td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}><StatBar value={totals.three_pct} color="var(--yellow)"   /></td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}><StatBar value={totals.ft_pct}    color="var(--text-mono)" /></td>
-                <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>—</td>
+    <table style={{
+      ...S.table,
+      tableLayout: isMobile ? "auto" : "fixed",
+      minWidth: isMobile ? 560 : undefined,
+    }}>
+      {!isMobile && (
+        <colgroup>
+          <col style={{ width: "20%" }} />
+          <col style={{ width: "4%" }} />
+          <col style={{ width: "6%" }} />
+          <col style={{ width: "5%" }} />
+          <col style={{ width: "5%" }} />
+          <col style={{ width: "5%" }} />
+          <col style={{ width: "4%" }} />
+          <col style={{ width: "4%" }} />
+          <col style={{ width: "4%" }} />
+          <col style={{ width: "4%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "8%" }} />
+          <col style={{ width: "5%" }} />
+        </colgroup>
+      )}
+      <thead>
+        <tr>
+          {COLS.map((c) => (
+            <th key={c.key} style={c.left ? S.thLeft : S.th}>{c.label}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {players.map((p, i) => {
+          const rowBg = i % 2 === 0 ? "var(--bg-card-alt)" : "var(--bg-card)";
+          if (p.dnp) {
+            return (
+              <tr key={i} className="stat-row" style={{ ...(i % 2 === 0 ? S.rowEven : S.rowOdd), opacity: 0.35 }}>
+                <td style={{ ...S.tdName, ...S.stickyLeft, background: rowBg }}>{p.name}</td>
+                <td style={S.tdPos}>{p.position}</td>
+                <td colSpan={COLS.length - 2} style={{ ...S.tdNum, letterSpacing: 2, fontSize: 10, color: "var(--text-dim)" }}>
+                  DNP
+                </td>
               </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
-    </div>
+            );
+          }
+          return (
+            <tr key={i} className="stat-row" style={i % 2 === 0 ? S.rowEven : S.rowOdd}>
+              <td style={{ ...S.tdName, ...S.stickyLeft, background: rowBg }}>{p.name}</td>
+              <td style={S.tdPos}>{p.position}</td>
+              <td style={S.tdNum}>{p.minutes || "—"}</td>
+              <td style={{
+                ...S.tdNum,
+                color: p.points >= 20 ? "var(--hot-stat)" : "var(--text-mono)",
+                fontWeight: p.points >= 20 ? 600 : 400,
+              }}>
+                {p.points}
+              </td>
+              <td style={S.tdNum}>{p.rebounds}</td>
+              <td style={S.tdNum}>{p.assists}</td>
+              <td style={S.tdNum}>{p.steals}</td>
+              <td style={S.tdNum}>{p.blocks}</td>
+              <td style={S.tdNum}>{p.turnovers}</td>
+              <td style={S.tdNum}>{p.fouls}</td>
+              <td style={S.tdNum}><StatBar value={p.fg_pct}    color="var(--accent)"    /></td>
+              <td style={S.tdNum}><StatBar value={p.three_pct} color="var(--yellow)"   /></td>
+              <td style={S.tdNum}><StatBar value={p.ft_pct}    color="var(--text-mono)" /></td>
+              <td style={S.tdNum}>
+                <span style={{
+                  ...S.pmPill,
+                  background: p.plus_minus > 0 ? "var(--pm-pos-bg)" : p.plus_minus < 0 ? "var(--pm-neg-bg)" : "transparent",
+                  color: p.plus_minus > 0 ? "var(--pm-pos-text)" : p.plus_minus < 0 ? "var(--pm-neg-text)" : "var(--text-dim)",
+                }}>
+                  {p.plus_minus > 0 ? `+${p.plus_minus}` : p.plus_minus}
+                </span>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+      {totals && (
+        <tfoot>
+          <tr>
+            <td style={{ ...S.tdName, ...S.totalsCell, ...S.stickyBottom, ...S.stickyLeft, zIndex: 3, fontWeight: 700, letterSpacing: 2, fontSize: 11 }}>TOTALS</td>
+            <td style={{ ...S.tdPos,  ...S.totalsCell, ...S.stickyBottom }}>—</td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>—</td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom, color: "var(--text-primary)", fontWeight: 700 }}>{totals.points}</td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.rebounds}</td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.assists}</td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.steals}</td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.blocks}</td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.turnovers}</td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>{totals.fouls}</td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}><StatBar value={totals.fg_pct}    color="var(--accent)"    /></td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}><StatBar value={totals.three_pct} color="var(--yellow)"   /></td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}><StatBar value={totals.ft_pct}    color="var(--text-mono)" /></td>
+            <td style={{ ...S.tdNum,  ...S.totalsCell, ...S.stickyBottom }}>—</td>
+          </tr>
+        </tfoot>
+      )}
+    </table>
   );
 }
 
@@ -186,24 +181,17 @@ const COLS = [
 ];
 
 const S = {
-  container: { paddingTop: 16 },
   center: { textAlign: "center", color: "var(--text-dim)", marginTop: 32 },
-  section: { marginBottom: 0 },
-  sectionHeader: { display: "flex", alignItems: "center", gap: 12, marginBottom: 12 },
-  accentBar: { width: 3, height: 22, background: "var(--accent)", borderRadius: 2, flexShrink: 0 },
-  sectionTeam: {
-    fontFamily: "'Bebas Neue', sans-serif",
-    fontSize: 20, letterSpacing: 3, color: "var(--text-primary)",
-  },
-  tableWrap: { borderRadius: 8, border: "1px solid var(--border-color)" },
   table: { width: "100%", borderCollapse: "collapse", tableLayout: "fixed" },
   th: {
+    position: "sticky", top: 0, zIndex: 2,
     background: "var(--bg-card)", color: "var(--yellow)",
     padding: "7px 4px", textAlign: "center",
     fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: 1,
     borderBottom: "1px solid var(--border-color)",
   },
   thLeft: {
+    position: "sticky", top: 0, left: 0, zIndex: 3,
     background: "var(--bg-card)", color: "var(--yellow)",
     padding: "7px 10px", textAlign: "left",
     fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: 1,
@@ -215,7 +203,11 @@ const S = {
     color: "var(--text-secondary)", fontWeight: 500,
     borderTop: "1px solid var(--border-color)", borderBottom: "none",
   },
+  stickyLeft: {
+    position: "sticky", left: 0, zIndex: 1,
+  },
   stickyBottom: {
+    position: "sticky", bottom: 0, zIndex: 2,
     background: "var(--bg-header)",
   },
   tdName: {
