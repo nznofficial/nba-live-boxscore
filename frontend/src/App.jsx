@@ -199,7 +199,6 @@ export default function App() {
         </div>
 
         <div className="theme-bar" style={S.themeBar}>
-          <span style={S.themeLabel}>THEME</span>
           {Object.entries(THEMES).map(([key, t]) => {
             const isActive = activeTheme === key;
             return (
