@@ -461,13 +461,13 @@ const S = {
   scoreRow: { display: "flex", alignItems: "center" },
   teamSide: { flex: 1, display: "flex", flexDirection: "column", gap: 1 },
   tricode: {
-    fontFamily: "'Barlow Condensed', sans-serif",
-    fontSize: 10, fontWeight: 700, letterSpacing: 5, color: "var(--text-secondary)",
+    fontFamily: "'Bebas Neue', sans-serif",
+    fontSize: 22, fontWeight: 700, letterSpacing: 4, color: "var(--text-primary)",
     textTransform: "uppercase", display: "inline-block",
   },
   record: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 9, color: "var(--text-dim)", letterSpacing: 0.5, lineHeight: 1,
+    fontSize: 11, color: "var(--text-secondary)", letterSpacing: 0.5, lineHeight: 1,
   },
   score: {
     fontFamily: "'Bebas Neue', sans-serif",

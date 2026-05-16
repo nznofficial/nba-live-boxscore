@@ -64,10 +64,6 @@ function TeamTable({ team, isMobile = false }) {
 
   return (
     <div style={S.section}>
-      <div style={S.sectionHeader}>
-        <div className="neon-bar-glow" style={S.accentBar} />
-        <span style={S.sectionTeam}>{tricode}</span>
-      </div>
       <div style={S.tableWrap}>
         <table style={{
           ...S.table,
