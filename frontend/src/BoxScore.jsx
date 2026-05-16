@@ -202,14 +202,12 @@ const S = {
     padding: "7px 4px", textAlign: "center",
     fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: 1,
     borderBottom: "1px solid var(--border-color)",
-    position: "sticky", top: 0, zIndex: 2,
   },
   thLeft: {
     background: "var(--bg-card)", color: "var(--yellow)",
     padding: "7px 10px", textAlign: "left",
     fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: 1,
     borderBottom: "1px solid var(--border-color)",
-    position: "sticky", top: 0, zIndex: 2,
   },
   rowEven: { background: "var(--bg-card-alt)" },
   rowOdd:  { background: "var(--bg-card)" },
@@ -218,7 +216,6 @@ const S = {
     borderTop: "1px solid var(--border-color)", borderBottom: "none",
   },
   stickyBottom: {
-    position: "sticky", bottom: 0, zIndex: 1,
     background: "var(--bg-header)",
   },
   tdName: {

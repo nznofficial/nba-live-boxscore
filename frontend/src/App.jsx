@@ -232,7 +232,7 @@ export default function App() {
               )}
 
               {showBoxScore && (
-                <div style={{ ...S.panel, overflowX: isMobile ? "auto" : undefined }}>
+                <div style={S.panel}>
                   <BoxScore
                     gameId={effectiveMock ? "mock" : selectedGame.game_id}
                     selectedSide={selectedSide}
@@ -370,8 +370,8 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
 
 const S = {
   page: {
-    height: "100vh", display: "flex", flexDirection: "column",
-    overflow: "hidden", background: "var(--bg-page)",
+    minHeight: "100vh", display: "flex", flexDirection: "column",
+    background: "var(--bg-page)",
   },
   header: {
     display: "flex", flexDirection: "column",
@@ -436,14 +436,14 @@ const S = {
     border: "1px solid", transition: "all 0.2s ease",
   },
   mainOuter: {
-    flex: 1, minHeight: 0,
+    flex: 1,
     display: "flex", justifyContent: "center",
-    padding: "0 24px", overflow: "hidden",
+    padding: "0 24px",
   },
   mainInner: {
-    maxWidth: 1100, width: "100%", flex: 1, minHeight: 0,
+    maxWidth: 1100, width: "100%",
     display: "flex", flexDirection: "column",
-    paddingTop: 24,
+    paddingTop: 24, paddingBottom: 48,
   },
   center: { textAlign: "center", color: "var(--text-secondary)", marginTop: 60, fontSize: 15, letterSpacing: 1 },
   scoreHeader: {
@@ -453,10 +453,10 @@ const S = {
     flexShrink: 0,
   },
   panel: {
-    flex: 1, minHeight: 0, overflowY: "auto",
+    overflowX: "auto",
     border: "1px solid var(--border-color)",
     borderTop: "none", borderBottomLeftRadius: 8, borderBottomRightRadius: 8,
-    background: "var(--bg-panel)", padding: "0 24px 0",
+    background: "var(--bg-panel)", padding: "0 24px 24px",
   },
   scoreRow: { display: "flex", alignItems: "center" },
   teamSide: { flex: 1, display: "flex", flexDirection: "column", gap: 1 },
