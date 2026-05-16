@@ -26,7 +26,7 @@ const THEMES = {
     label: "BEAVS",
     accent: "#DC4405",  accentRgb: "220, 68, 5",
     yellow: "#FF6B1A",  yellowRgb: "255, 107, 26",
-    pink:   "#DC4405",  pinkRgb:   "220, 68, 5",
+    pink:   "#FFFFFF",  pinkRgb:   "255, 255, 255",
     pmPosText: "#DC4405", pmPosBg: "rgba(220,68,5,0.12)",
     hotStat: "#FF6B1A", scoreWin: "#DC4405",
     liveColor: "#FF6B1A", liveRgb: "255, 107, 26",
