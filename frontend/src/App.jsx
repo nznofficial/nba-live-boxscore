@@ -456,7 +456,7 @@ const S = {
     flex: 1, minHeight: 0, overflowY: "auto",
     border: "1px solid var(--border-color)",
     borderTop: "none", borderBottomLeftRadius: 8, borderBottomRightRadius: 8,
-    background: "var(--bg-panel)", padding: "24px 24px 0",
+    background: "var(--bg-panel)", padding: "0 24px 0",
   },
   scoreRow: { display: "flex", alignItems: "center" },
   teamSide: { flex: 1, display: "flex", flexDirection: "column", gap: 1 },

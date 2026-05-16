@@ -186,7 +186,7 @@ const COLS = [
 ];
 
 const S = {
-  container: {},
+  container: { paddingTop: 16 },
   center: { textAlign: "center", color: "var(--text-dim)", marginTop: 32 },
   section: { marginBottom: 0 },
   sectionHeader: { display: "flex", alignItems: "center", gap: 12, marginBottom: 12 },
