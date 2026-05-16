@@ -322,6 +322,7 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: side === "home" ? "flex-end" : "flex-start",
     gap: isMobile ? 8 : 14,
     cursor: "pointer",
     opacity: selectedSide === side ? 1 : 0.4,
@@ -338,7 +339,7 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
         {/* Away: Logo → Name+Record → Score */}
         <div style={sideStyle("away")} onClick={() => onSideSelect("away")}>
           <TeamLogo tricode={game.away_team} size={logoSize} />
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <span style={{
               ...S.tricode,
               borderBottom: selectedSide === "away" ? "1px solid var(--accent)" : "1px solid transparent",
@@ -379,7 +380,7 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
           >
             {game.home_score}
           </span>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, alignItems: "flex-end" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
             <span style={{
               ...S.tricode,
               borderBottom: selectedSide === "home" ? "1px solid var(--accent)" : "1px solid transparent",
