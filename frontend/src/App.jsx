@@ -107,6 +107,13 @@ export default function App() {
   useEffect(() => { applyTheme(THEMES[activeTheme]); }, [activeTheme]);
   useEffect(() => { setSelectedSide("away"); setSeriesData(null); setActiveView("boxscore"); }, [selectedId]);
 
+  const shiftDate = (days) => {
+    const d = new Date(date + "T12:00:00");
+    d.setDate(d.getDate() + days);
+    const next = d.toISOString().slice(0, 10);
+    if (next <= localToday()) setDate(next);
+  };
+
   const selectTheme = (key) => {
     setActiveTheme(key);
     localStorage.setItem("nba-theme", key);
@@ -160,6 +167,7 @@ export default function App() {
                 {liveCount} LIVE
               </div>
             )}
+            <button onClick={() => shiftDate(-1)} style={S.dayBtn}>&#8592;</button>
             <input
               type="date"
               value={date}
@@ -167,6 +175,7 @@ export default function App() {
               onChange={(e) => setDate(e.target.value)}
               style={S.datePicker}
             />
+            <button onClick={() => shiftDate(1)} disabled={date >= localToday()} style={{ ...S.dayBtn, opacity: date >= localToday() ? 0.3 : 1 }}>&#8594;</button>
             {games.length > 0 && (
               <select
                 value={selectedId || ""}
@@ -617,6 +626,13 @@ const S = {
     fontFamily: "'Barlow Condensed', sans-serif",
     fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "var(--live-color)",
     boxShadow: "0 0 10px rgba(var(--live-rgb), 0.15)",
+  },
+  dayBtn: {
+    background: "#161c28", border: "1px solid var(--border-color)",
+    color: "var(--text-primary)", padding: "7px 11px", borderRadius: 6,
+    cursor: "pointer", fontSize: 14, lineHeight: 1,
+    fontFamily: "'Barlow Condensed', sans-serif",
+    transition: "border-color 0.15s, color 0.15s",
   },
   datePicker: {
     background: "#161c28", border: "1px solid var(--border-color)",
