@@ -322,7 +322,7 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     gap: isMobile ? 8 : 14,
     cursor: "pointer",
     opacity: selectedSide === side ? 1 : 0.4,
@@ -351,12 +351,14 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
               {game.away_record && <span style={S.record}>{game.away_record}</span>}
             </div>
           </div>
-          <span
-            className={awayWins ? "neon-score-glow" : ""}
-            style={{ ...S.score, fontSize: isMobile ? 40 : 56, color: awayWins ? "var(--score-win-color)" : "var(--text-primary)" }}
-          >
-            {game.away_score}
-          </span>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <span
+              className={awayWins ? "neon-score-glow" : ""}
+              style={{ ...S.score, fontSize: isMobile ? 40 : 56, color: awayWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+            >
+              {game.away_score}
+            </span>
+          </div>
         </div>
 
         <div style={{ ...S.divider, height: isMobile ? 32 : 44 }} />
@@ -376,12 +378,14 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
 
         {/* Home: [Score] ←space→ [Name/Record + Logo] */}
         <div style={sideStyle("home")} onClick={() => onSideSelect("home")}>
-          <span
-            className={homeWins ? "neon-score-glow" : ""}
-            style={{ ...S.score, fontSize: isMobile ? 40 : 56, color: homeWins ? "var(--score-win-color)" : "var(--text-primary)" }}
-          >
-            {game.home_score}
-          </span>
+          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+            <span
+              className={homeWins ? "neon-score-glow" : ""}
+              style={{ ...S.score, fontSize: isMobile ? 40 : 56, color: homeWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+            >
+              {game.home_score}
+            </span>
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 14 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
               <span style={{
