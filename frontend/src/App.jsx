@@ -88,6 +88,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [selectedSide, setSelectedSide] = useState("away");
   const [useMock, setUseMock] = useState(false);
+  const [seriesData, setSeriesData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -103,7 +104,7 @@ export default function App() {
   const showPregame   = selectedGame && selectedGame.game_status === 1 && !effectiveMock;
 
   useEffect(() => { applyTheme(THEMES[activeTheme]); }, [activeTheme]);
-  useEffect(() => { setSelectedSide("away"); }, [selectedId]);
+  useEffect(() => { setSelectedSide("away"); setSeriesData(null); }, [selectedId]);
 
   const selectTheme = (key) => {
     setActiveTheme(key);
@@ -223,6 +224,7 @@ export default function App() {
                 selectedSide={selectedSide}
                 onSideSelect={setSelectedSide}
                 isMobile={isMobile}
+                seriesData={seriesData}
               />
 
               {showPregame && (
@@ -244,6 +246,7 @@ export default function App() {
                     gameId={effectiveMock ? "mock" : selectedGame.game_id}
                     selectedSide={selectedSide}
                     isMobile={isMobile}
+                    onData={(d) => setSeriesData(d.seasonseries?.length ? d.seasonseries : null)}
                   />
                 </div>
               )}
@@ -308,7 +311,7 @@ function TeamLogo({ tricode, size }) {
   );
 }
 
-function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
+function ScoreHeader({ game, selectedSide, onSideSelect, isMobile, seriesData }) {
   const isLive  = game.game_status === 2;
   const isFinal = game.game_status === 3;
   const awayWins = isFinal && game.away_score > game.home_score;
@@ -316,6 +319,9 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
   const awayColor = game.away_color || "#1e2d3d";
   const homeColor = game.home_color || "#1e2d3d";
   const logoSize  = isMobile ? 36 : 48;
+  const seriesSummary = seriesData?.find(s => s.type === "playoff")?.summary
+    || seriesData?.find(s => s.type === "season")?.summary
+    || null;
 
   const sideStyle = (side) => ({
     flex: 1,
@@ -372,6 +378,15 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
           }}>
             {isLive ? "LIVE" : game.status}
           </span>
+          {seriesSummary && (
+            <span style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 9, letterSpacing: 1, color: "var(--text-dim)",
+              textAlign: "center", lineHeight: 1.4,
+            }}>
+              {seriesSummary}
+            </span>
+          )}
         </div>
 
         <div style={{ ...S.divider, height: isMobile ? 32 : 44 }} />
@@ -403,9 +418,111 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
       </div>
 
       {(game.away_linescore?.length ?? 0) > 0 && <QuarterStrip game={game} />}
+      <SeriesHistory seasonseries={seriesData} />
     </div>
   );
 }
+
+function SeriesHistory({ seasonseries }) {
+  if (!seasonseries?.length) return null;
+
+  const sorted = [...seasonseries].sort((a, b) =>
+    a.type === "playoff" ? -1 : b.type === "playoff" ? 1 : 0
+  );
+
+  return (
+    <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border-color)" }}>
+      {sorted.map((series, si) => (
+        <div key={si} style={{ marginBottom: si < sorted.length - 1 ? 16 : 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 7 }}>
+            <span style={SH.typeLabel}>{series.type === "playoff" ? "PLAYOFFS" : "REG SEASON"}</span>
+            <span style={SH.summaryLabel}>{series.summary}</span>
+          </div>
+          <table style={SH.table}>
+            <tbody>
+              {series.events.map((ev, gi) => {
+                const date = ev.date
+                  ? new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                  : "";
+                const awayWins = ev.winner === ev.away_team;
+                const homeWins = ev.winner === ev.home_team;
+                return (
+                  <tr key={gi}>
+                    {series.type === "playoff" && (
+                      <td style={SH.tdGame}>G{gi + 1}</td>
+                    )}
+                    <td style={SH.tdDate}>{date}</td>
+                    {ev.is_final ? (
+                      <>
+                        <td style={{ ...SH.tdTeam, color: awayWins ? "var(--text-primary)" : "var(--text-dim)", fontWeight: awayWins ? 700 : 400 }}>
+                          {ev.away_team}
+                        </td>
+                        <td style={{ ...SH.tdScore, color: awayWins ? "var(--accent)" : "var(--text-mono)" }}>
+                          {ev.away_score}
+                        </td>
+                        <td style={SH.tdDash}>–</td>
+                        <td style={{ ...SH.tdScore, color: homeWins ? "var(--accent)" : "var(--text-mono)" }}>
+                          {ev.home_score}
+                        </td>
+                        <td style={{ ...SH.tdTeam, color: homeWins ? "var(--text-primary)" : "var(--text-dim)", fontWeight: homeWins ? 700 : 400 }}>
+                          {ev.home_team}
+                        </td>
+                      </>
+                    ) : (
+                      <td colSpan={5} style={SH.tdScheduled}>
+                        {ev.away_team} @ {ev.home_team} &nbsp;·&nbsp; {ev.status}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const SH = {
+  typeLabel: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 8, letterSpacing: 2.5, color: "var(--yellow)", textTransform: "uppercase",
+  },
+  summaryLabel: {
+    fontFamily: "'Barlow Condensed', sans-serif",
+    fontSize: 13, color: "var(--text-secondary)", letterSpacing: 1,
+  },
+  table: { borderCollapse: "collapse" },
+  tdGame: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 9, color: "var(--text-dim)", letterSpacing: 1,
+    paddingRight: 10, paddingBottom: 4, width: 22,
+  },
+  tdDate: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 9, color: "var(--text-dim)",
+    paddingRight: 16, paddingBottom: 4, minWidth: 50,
+  },
+  tdTeam: {
+    fontFamily: "'Barlow Condensed', sans-serif",
+    fontSize: 13, letterSpacing: 1, paddingBottom: 4, paddingRight: 6,
+  },
+  tdScore: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 12, paddingBottom: 4, paddingRight: 2,
+    textAlign: "right", minWidth: 26,
+  },
+  tdDash: {
+    fontFamily: "'JetBrains Mono', monospace",
+    fontSize: 10, color: "var(--border-color)",
+    paddingBottom: 4, paddingLeft: 2, paddingRight: 6,
+  },
+  tdScheduled: {
+    fontFamily: "'Barlow Condensed', sans-serif",
+    fontSize: 12, color: "var(--text-dim)", letterSpacing: 0.5, paddingBottom: 4,
+  },
+};
 
 const S = {
   page: {
@@ -516,8 +633,8 @@ const S = {
   },
   divider: { width: 1, height: 44, background: "var(--border-color)", margin: "0 20px", flexShrink: 0 },
   statusCol: {
-    display: "flex", alignItems: "center", justifyContent: "center",
-    minWidth: 80,
+    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+    minWidth: 80, gap: 4,
   },
   statusLabel: {
     fontFamily: "'Barlow Condensed', sans-serif",

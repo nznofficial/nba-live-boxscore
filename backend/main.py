@@ -57,6 +57,41 @@ def _get_record(competitor):
     recs = competitor.get("records", [])
     return recs[0].get("summary", "") if recs else ""
 
+def _parse_seasonseries(data):
+    result = []
+    for series in data.get("seasonseries", []):
+        events = []
+        for ev in series.get("events", []):
+            competitors = ev.get("competitors", [])
+            home = next((c for c in competitors if c.get("homeAway") == "home"), {})
+            away = next((c for c in competitors if c.get("homeAway") == "away"), {})
+            status_type = ev.get("statusType", {})
+            is_final = "FINAL" in status_type.get("name", "").upper()
+            winner = next(
+                (c.get("team", {}).get("abbreviation", "")
+                 for c in competitors if c.get("winner")),
+                None,
+            )
+            events.append({
+                "game_id":    ev.get("id", ""),
+                "date":       ev.get("date", ""),
+                "home_team":  home.get("team", {}).get("abbreviation", ""),
+                "home_score": int(float(home.get("score") or 0)) if is_final else None,
+                "away_team":  away.get("team", {}).get("abbreviation", ""),
+                "away_score": int(float(away.get("score") or 0)) if is_final else None,
+                "is_final":   is_final,
+                "status":     status_type.get("shortDetail", ""),
+                "winner":     winner,
+            })
+        result.append({
+            "type":      series.get("type", ""),
+            "title":     series.get("title", ""),
+            "summary":   series.get("summary", ""),
+            "completed": series.get("completed", False),
+            "events":    events,
+        })
+    return result
+
 def _compute_totals(players):
     active = [p for p in players if not p.get("dnp")]
     fgm  = sum(p["fg_made"]  for p in active)
@@ -126,6 +161,7 @@ MOCK_BOXSCORE = {
     "status": "Final", "period": 4,
     "away": {"team": "DET", "score": 108, "players": _det, "totals": _compute_totals(_det)},
     "home": {"team": "CLE", "score": 101, "players": _cle, "totals": _compute_totals(_cle)},
+    "seasonseries": [],
 }
 
 
@@ -301,4 +337,8 @@ def get_boxscore(game_id: str):
     for t in (home_team, away_team):
         del t["_side"]
 
-    return {"home": home_team, "away": away_team, "status": status_text, "period": period}
+    return {
+        "home": home_team, "away": away_team,
+        "status": status_text, "period": period,
+        "seasonseries": _parse_seasonseries(data),
+    }

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const REFRESH_MS = 30000;
 
-export default function BoxScore({ gameId, selectedSide = "away", isMobile = false }) {
+export default function BoxScore({ gameId, selectedSide = "away", isMobile = false, onData }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,7 +12,9 @@ export default function BoxScore({ gameId, selectedSide = "away", isMobile = fal
     try {
       const res = await fetch(`${API}/boxscore/${gameId}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setData(await res.json());
+      const json = await res.json();
+      setData(json);
+      onData?.(json);
       setError(null);
     } catch {
       setError("Could not load box score.");
