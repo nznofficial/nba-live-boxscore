@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import requests
 from datetime import date as date_type, datetime
 from fastapi import FastAPI, HTTPException, Query
@@ -18,6 +19,23 @@ app.add_middleware(
 )
 
 ESPN = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba"
+
+TTL_LIVE  = 30       # live game data — matches frontend refresh interval
+TTL_FINAL = 3600     # final game data — score never changes
+TTL_PRE   = 60       # pregame / scheduled
+TTL_GAMES_LIVE = 30  # scoreboard when live games are on
+TTL_GAMES_IDLE = 300 # scoreboard when nothing is live
+
+_CACHE: dict = {}
+
+def _cache_get(key: str):
+    entry = _CACHE.get(key)
+    if entry and time.time() < entry["expires"]:
+        return entry["data"]
+    return None
+
+def _cache_set(key: str, data, ttl: int):
+    _CACHE[key] = {"data": data, "expires": time.time() + ttl}
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -182,6 +200,10 @@ def get_games(date: str = Query(default=None)):
     except ValueError:
         raise HTTPException(status_code=400, detail="Date must be YYYY-MM-DD")
 
+    cache_key = f"games:{use_date}"
+    if cached := _cache_get(cache_key):
+        return cached
+
     try:
         resp = requests.get(
             f"{ESPN}/scoreboard",
@@ -228,6 +250,9 @@ def get_games(date: str = Query(default=None)):
             "away_record":  _get_record(away),
             "away_linescore": [int(ls.get("value", 0) or 0) for ls in away.get("linescores", [])],
         })
+
+    has_live = any(g["game_status"] == 2 for g in result)
+    _cache_set(cache_key, result, TTL_GAMES_LIVE if has_live else TTL_GAMES_IDLE)
     return result
 
 
@@ -235,6 +260,11 @@ def get_games(date: str = Query(default=None)):
 def get_boxscore(game_id: str):
     if not re.fullmatch(r"\d{1,12}", game_id):
         raise HTTPException(status_code=400, detail="Invalid game ID")
+
+    cache_key = f"boxscore:{game_id}"
+    if cached := _cache_get(cache_key):
+        return cached
+
     try:
         resp = requests.get(f"{ESPN}/summary", params={"event": game_id}, timeout=15)
         resp.raise_for_status()
@@ -337,8 +367,19 @@ def get_boxscore(game_id: str):
     for t in (home_team, away_team):
         del t["_side"]
 
-    return {
+    result = {
         "home": home_team, "away": away_team,
         "status": status_text, "period": period,
         "seasonseries": _parse_seasonseries(data),
     }
+
+    status_name = header_status.get("type", {}).get("name", "")
+    if "FINAL" in status_name:
+        ttl = TTL_FINAL
+    elif "IN_PROGRESS" in status_name:
+        ttl = TTL_LIVE
+    else:
+        ttl = TTL_PRE
+    _cache_set(cache_key, result, ttl)
+
+    return result
