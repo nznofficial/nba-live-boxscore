@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const REFRESH_MS = 30000;
 
-export default function BoxScore({ gameId, selectedSide = "away" }) {
+export default function BoxScore({ gameId, selectedSide = "away", isMobile = false }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,7 +34,7 @@ export default function BoxScore({ gameId, selectedSide = "away" }) {
 
   return (
     <div style={S.container}>
-      <TeamTable team={selectedSide === "away" ? data.away : data.home} />
+      <TeamTable team={selectedSide === "away" ? data.away : data.home} isMobile={isMobile} />
     </div>
   );
 }
@@ -59,7 +59,7 @@ function StatBar({ value, color }) {
   );
 }
 
-function TeamTable({ team }) {
+function TeamTable({ team, isMobile = false }) {
   const { team: tricode, players, totals } = team;
 
   return (
@@ -69,7 +69,12 @@ function TeamTable({ team }) {
         <span style={S.sectionTeam}>{tricode}</span>
       </div>
       <div style={S.tableWrap}>
-        <table style={S.table}>
+        <table style={{
+          ...S.table,
+          tableLayout: isMobile ? "auto" : "fixed",
+          minWidth: isMobile ? 560 : undefined,
+        }}>
+          {!isMobile && (
           <colgroup>
             <col style={{ width: "20%" }} />
             <col style={{ width: "4%" }} />
@@ -86,6 +91,7 @@ function TeamTable({ team }) {
             <col style={{ width: "8%" }} />
             <col style={{ width: "5%" }} />
           </colgroup>
+          )}
           <thead>
             <tr>
               {COLS.map((c) => (

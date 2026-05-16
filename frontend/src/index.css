@@ -129,3 +129,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.4);
   cursor: pointer;
 }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .theme-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+  .quarter-strip-wrap { overflow-x: auto; }
+}

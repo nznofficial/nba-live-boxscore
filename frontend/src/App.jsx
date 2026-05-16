@@ -67,6 +67,16 @@ function applyTheme(t) {
   r.style.setProperty("--live-rgb",        t.liveRgb);
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+}
+
 function localToday() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -85,6 +95,7 @@ export default function App() {
     () => localStorage.getItem("nba-theme") || "gulf"
   );
 
+  const isMobile     = useIsMobile();
   const liveCount    = games.filter((g) => g.game_status === 2).length;
   const selectedGame = games.find((g) => g.game_id === selectedId) || null;
   const effectiveMock = useMock && selectedGame?.game_status === 1;
@@ -126,14 +137,14 @@ export default function App() {
 
   return (
     <div style={S.page}>
-      <header className="header-border-sweep" style={S.header}>
+      <header className="header-border-sweep" style={{ ...S.header, padding: isMobile ? "12px 16px 10px" : "16px 40px 14px" }}>
         <div style={S.headerTop}>
           <div style={S.brand}>
-            <span className="pink-glow" style={S.brandNba}>NBA</span>
+            <span className="pink-glow" style={{ ...S.brandNba, fontSize: isMobile ? 36 : 48 }}>NBA</span>
             <div style={S.brandRule} />
             <span style={S.brandSub}>LIVE BOX SCORE</span>
           </div>
-          <div style={S.controls}>
+          <div style={{ ...S.controls, gap: isMobile ? 8 : 12 }}>
             {liveCount > 0 && (
               <div style={S.liveBadge}>
                 <span className="live-dot" />
@@ -151,7 +162,7 @@ export default function App() {
               <select
                 value={selectedId || ""}
                 onChange={(e) => { setSelectedId(e.target.value); setUseMock(false); }}
-                style={S.gameSelect}
+                style={{ ...S.gameSelect, minWidth: isMobile ? 0 : 220, flex: isMobile ? 1 : undefined }}
               >
                 {games.map((g) => (
                   <option key={g.game_id} value={g.game_id}>
@@ -167,7 +178,7 @@ export default function App() {
           </div>
         </div>
 
-        <div style={S.themeBar}>
+        <div className="theme-bar" style={S.themeBar}>
           <span style={S.themeLabel}>THEME</span>
           {Object.entries(THEMES).map(([key, t]) => {
             const isActive = activeTheme === key;
@@ -190,8 +201,8 @@ export default function App() {
         </div>
       </header>
 
-      <div style={S.mainOuter}>
-        <div style={S.mainInner}>
+      <div style={{ ...S.mainOuter, padding: isMobile ? "0 12px" : "0 24px" }}>
+        <div style={{ ...S.mainInner, paddingTop: isMobile ? 16 : 24 }}>
           {loading && <p style={S.center}>Loading games...</p>}
           {error   && <p style={{ ...S.center, color: "#ef4444" }}>{error}</p>}
           {!loading && !error && games.length === 0 && (
@@ -204,6 +215,7 @@ export default function App() {
                 game={selectedGame}
                 selectedSide={selectedSide}
                 onSideSelect={setSelectedSide}
+                isMobile={isMobile}
               />
 
               {showPregame && (
@@ -220,10 +232,11 @@ export default function App() {
               )}
 
               {showBoxScore && (
-                <div style={S.panel}>
+                <div style={{ ...S.panel, overflowX: isMobile ? "auto" : undefined }}>
                   <BoxScore
                     gameId={effectiveMock ? "mock" : selectedGame.game_id}
                     selectedSide={selectedSide}
+                    isMobile={isMobile}
                   />
                 </div>
               )}
@@ -248,7 +261,7 @@ function QuarterStrip({ game }) {
   if (periods === 0) return null;
 
   return (
-    <div style={SQ.wrap}>
+    <div className="quarter-strip-wrap" style={SQ.wrap}>
       <table style={SQ.table}>
         <thead>
           <tr>
@@ -278,7 +291,7 @@ function QuarterStrip({ game }) {
   );
 }
 
-function ScoreHeader({ game, selectedSide, onSideSelect }) {
+function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
   const isLive  = game.game_status === 2;
   const isFinal = game.game_status === 3;
   const awayWins = isFinal && game.away_score > game.home_score;
@@ -311,13 +324,13 @@ function ScoreHeader({ game, selectedSide, onSideSelect }) {
           {game.away_record && <span style={S.record}>{game.away_record}</span>}
           <span
             className={awayWins ? "neon-score-glow" : ""}
-            style={{ ...S.score, color: awayWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+            style={{ ...S.score, fontSize: isMobile ? 40 : 56, color: awayWins ? "var(--score-win-color)" : "var(--text-primary)" }}
           >
             {game.away_score}
           </span>
         </div>
 
-        <div style={S.divider} />
+        <div style={{ ...S.divider, height: isMobile ? 32 : 44 }} />
 
         <div style={S.statusCol}>
           {isLive && <span className="live-dot" />}
@@ -330,7 +343,7 @@ function ScoreHeader({ game, selectedSide, onSideSelect }) {
           </span>
         </div>
 
-        <div style={S.divider} />
+        <div style={{ ...S.divider, height: isMobile ? 32 : 44 }} />
 
         <div style={{ ...sideStyle("home"), textAlign: "right" }} onClick={() => onSideSelect("home")}>
           <span style={{
@@ -343,7 +356,7 @@ function ScoreHeader({ game, selectedSide, onSideSelect }) {
           {game.home_record && <span style={S.record}>{game.home_record}</span>}
           <span
             className={homeWins ? "neon-score-glow" : ""}
-            style={{ ...S.score, color: homeWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+            style={{ ...S.score, fontSize: isMobile ? 40 : 56, color: homeWins ? "var(--score-win-color)" : "var(--text-primary)" }}
           >
             {game.home_score}
           </span>
