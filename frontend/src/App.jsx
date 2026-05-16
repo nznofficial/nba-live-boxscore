@@ -140,7 +140,14 @@ export default function App() {
       <header className="header-border-sweep" style={{ ...S.header, padding: isMobile ? "12px 16px 10px" : "16px 40px 14px" }}>
         <div style={S.headerTop}>
           <div style={S.brand}>
-            <span className="pink-glow" style={{ ...S.brandNba, fontSize: isMobile ? 36 : 48 }}>NBA</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <img
+                src="https://a.espncdn.com/i/teamlogos/leagues/500/nba.png"
+                alt="NBA"
+                style={{ width: isMobile ? 30 : 40, height: isMobile ? 30 : 40, objectFit: "contain" }}
+              />
+              <span className="pink-glow" style={{ ...S.brandNba, fontSize: isMobile ? 36 : 48 }}>NBA</span>
+            </div>
             <div style={S.brandRule} />
             <span style={S.brandSub}>LIVE BOX SCORE</span>
           </div>
@@ -325,15 +332,19 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
     }}>
       <div style={S.scoreRow}>
         <div style={sideStyle("away")} onClick={() => onSideSelect("away")}>
-          <TeamLogo tricode={game.away_team} size={logoSize} />
-          <span style={{
-            ...S.tricode,
-            borderBottom: selectedSide === "away" ? "1px solid var(--accent)" : "1px solid transparent",
-            paddingBottom: 2,
-          }}>
-            {game.away_team}
-          </span>
-          {game.away_record && <span style={S.record}>{game.away_record}</span>}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <TeamLogo tricode={game.away_team} size={logoSize} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <span style={{
+                ...S.tricode,
+                borderBottom: selectedSide === "away" ? "1px solid var(--accent)" : "1px solid transparent",
+                paddingBottom: 2,
+              }}>
+                {game.away_team}
+              </span>
+              {game.away_record && <span style={S.record}>{game.away_record}</span>}
+            </div>
+          </div>
           <span
             className={awayWins ? "neon-score-glow" : ""}
             style={{ ...S.score, fontSize: isMobile ? 40 : 56, color: awayWins ? "var(--score-win-color)" : "var(--text-primary)" }}
@@ -357,16 +368,20 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile }) {
 
         <div style={{ ...S.divider, height: isMobile ? 32 : 44 }} />
 
-        <div style={{ ...sideStyle("home"), textAlign: "right", alignItems: "flex-end" }} onClick={() => onSideSelect("home")}>
-          <TeamLogo tricode={game.home_team} size={logoSize} />
-          <span style={{
-            ...S.tricode,
-            borderBottom: selectedSide === "home" ? "1px solid var(--accent)" : "1px solid transparent",
-            paddingBottom: 2,
-          }}>
-            {game.home_team}
-          </span>
-          {game.home_record && <span style={S.record}>{game.home_record}</span>}
+        <div style={{ ...sideStyle("home"), alignItems: "flex-end" }} onClick={() => onSideSelect("home")}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
+              <span style={{
+                ...S.tricode,
+                borderBottom: selectedSide === "home" ? "1px solid var(--accent)" : "1px solid transparent",
+                paddingBottom: 2,
+              }}>
+                {game.home_team}
+              </span>
+              {game.home_record && <span style={S.record}>{game.home_record}</span>}
+            </div>
+            <TeamLogo tricode={game.home_team} size={logoSize} />
+          </div>
           <span
             className={homeWins ? "neon-score-glow" : ""}
             style={{ ...S.score, fontSize: isMobile ? 40 : 56, color: homeWins ? "var(--score-win-color)" : "var(--text-primary)" }}
