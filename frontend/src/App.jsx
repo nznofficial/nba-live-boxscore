@@ -176,20 +176,22 @@ export default function App() {
               style={S.datePicker}
             />
             <button onClick={() => shiftDate(1)} disabled={date >= localToday()} style={{ ...S.dayBtn, opacity: date >= localToday() ? 0.3 : 1 }}>&#8594;</button>
-            {games.length > 0 && (
-              <select
-                value={selectedId || ""}
-                onChange={(e) => { setSelectedId(e.target.value); setUseMock(false); }}
-                style={{ ...S.gameSelect, minWidth: isMobile ? 0 : 220, flex: isMobile ? 1 : undefined }}
-              >
-                {games.map((g) => (
-                  <option key={g.game_id} value={g.game_id}>
-                    {g.away_team} @ {g.home_team}
-                    {g.game_status === 2 ? "  · LIVE" : `  · ${g.status}`}
-                  </option>
-                ))}
-              </select>
-            )}
+            <select
+              value={selectedId || ""}
+              onChange={(e) => { setSelectedId(e.target.value); setUseMock(false); }}
+              style={{ ...S.gameSelect, minWidth: isMobile ? 0 : 220, flex: isMobile ? 1 : undefined, opacity: games.length === 0 ? 0.4 : 1 }}
+              disabled={games.length === 0}
+            >
+              {games.length === 0
+                ? <option value="">No games</option>
+                : games.map((g) => (
+                    <option key={g.game_id} value={g.game_id}>
+                      {g.away_team} @ {g.home_team}
+                      {g.game_status === 2 ? "  · LIVE" : `  · ${g.status}`}
+                    </option>
+                  ))
+              }
+            </select>
             {lastUpdated && !isMobile && (
               <span className="yellow-glow" style={S.updated}>Updated {lastUpdated}</span>
             )}
@@ -395,63 +397,65 @@ function ScoreHeader({ game, selectedSide, onSideSelect, isMobile, seriesData, a
     }}>
       {isMobile ? (
         <>
-          {/* Mobile row 1: big scores + status */}
+          {/* Mobile row 1: logo + score on each side, status center */}
           <div style={{ display: "flex", alignItems: "center" }}>
-            <div
-              onClick={() => onSideSelect("away")}
-              style={{ flex: 1, display: "flex", justifyContent: "center", cursor: "pointer", opacity: selectedSide === "away" ? 1 : 0.4, transition: "opacity 0.2s" }}
-            >
-              <span
-                className={awayWins ? "neon-score-glow" : ""}
-                style={{ ...S.score, fontSize: 52, color: awayWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+            {/* Away: logo always visible, score fades with selection */}
+            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              <TeamLogo tricode={game.away_team} size={34} />
+              <div
+                onClick={() => onSideSelect("away")}
+                style={{ flex: 1, display: "flex", justifyContent: "center", cursor: "pointer", opacity: selectedSide === "away" ? 1 : 0.35, transition: "opacity 0.2s" }}
               >
-                {game.away_score}
-              </span>
+                <span
+                  className={awayWins ? "neon-score-glow" : ""}
+                  style={{ ...S.score, fontSize: 46, color: awayWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+                >
+                  {game.away_score}
+                </span>
+              </div>
             </div>
             <div
-              style={{ ...S.statusCol, minWidth: 66, padding: "4px 8px", flexShrink: 0, ...statusInteractiveStyle }}
+              style={{ ...S.statusCol, minWidth: 62, padding: "4px 6px", flexShrink: 0, ...statusInteractiveStyle }}
               onClick={() => seriesData && onViewToggle()}
             >
               {statusContent}
             </div>
-            <div
-              onClick={() => onSideSelect("home")}
-              style={{ flex: 1, display: "flex", justifyContent: "center", cursor: "pointer", opacity: selectedSide === "home" ? 1 : 0.4, transition: "opacity 0.2s" }}
-            >
-              <span
-                className={homeWins ? "neon-score-glow" : ""}
-                style={{ ...S.score, fontSize: 52, color: homeWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+            {/* Home: score fades with selection, logo always visible */}
+            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", minWidth: 0 }}>
+              <div
+                onClick={() => onSideSelect("home")}
+                style={{ flex: 1, display: "flex", justifyContent: "center", cursor: "pointer", opacity: selectedSide === "home" ? 1 : 0.35, transition: "opacity 0.2s" }}
               >
-                {game.home_score}
-              </span>
+                <span
+                  className={homeWins ? "neon-score-glow" : ""}
+                  style={{ ...S.score, fontSize: 46, color: homeWins ? "var(--score-win-color)" : "var(--text-primary)" }}
+                >
+                  {game.home_score}
+                </span>
+              </div>
+              <TeamLogo tricode={game.home_team} size={34} />
             </div>
           </div>
-          {/* Mobile row 2: team logos + names */}
-          <div style={{ display: "flex", alignItems: "center", marginTop: 10 }}>
+          {/* Mobile row 2: team names + records only */}
+          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
             <div
               onClick={() => onSideSelect("away")}
-              style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", opacity: selectedSide === "away" ? 1 : 0.4, transition: "opacity 0.2s" }}
+              style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, cursor: "pointer", opacity: selectedSide === "away" ? 1 : 0.4, transition: "opacity 0.2s" }}
             >
-              <TeamLogo tricode={game.away_team} size={28} />
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ ...S.tricode, fontSize: 18, borderBottom: selectedSide === "away" ? "1px solid var(--accent)" : "1px solid transparent", paddingBottom: 2 }}>
-                  {game.away_team}
-                </span>
-                {game.away_record && <span style={S.record}>{game.away_record}</span>}
-              </div>
+              <span style={{ ...S.tricode, fontSize: 16, borderBottom: selectedSide === "away" ? "1px solid var(--accent)" : "1px solid transparent", paddingBottom: 2 }}>
+                {game.away_team}
+              </span>
+              {game.away_record && <span style={S.record}>{game.away_record}</span>}
             </div>
-            <div style={{ minWidth: 66, flexShrink: 0 }} />
+            <div style={{ minWidth: 62, flexShrink: 0 }} />
             <div
               onClick={() => onSideSelect("home")}
-              style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", cursor: "pointer", opacity: selectedSide === "home" ? 1 : 0.4, transition: "opacity 0.2s" }}
+              style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end", cursor: "pointer", opacity: selectedSide === "home" ? 1 : 0.4, transition: "opacity 0.2s" }}
             >
-              <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
-                <span style={{ ...S.tricode, fontSize: 18, borderBottom: selectedSide === "home" ? "1px solid var(--accent)" : "1px solid transparent", paddingBottom: 2 }}>
-                  {game.home_team}
-                </span>
-                {game.home_record && <span style={S.record}>{game.home_record}</span>}
-              </div>
-              <TeamLogo tricode={game.home_team} size={28} />
+              <span style={{ ...S.tricode, fontSize: 16, borderBottom: selectedSide === "home" ? "1px solid var(--accent)" : "1px solid transparent", paddingBottom: 2 }}>
+                {game.home_team}
+              </span>
+              {game.home_record && <span style={S.record}>{game.home_record}</span>}
             </div>
           </div>
         </>
@@ -713,8 +717,8 @@ const S = {
     fontFamily: "'JetBrains Mono', monospace",
   },
   themeBar: {
-    display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-    paddingTop: 12, borderTop: "1px solid var(--border-color)",
+    display: "flex", alignItems: "center", gap: 8, flexWrap: "nowrap",
+    overflowX: "auto", paddingTop: 12, borderTop: "1px solid var(--border-color)",
   },
   themeLabel: {
     fontFamily: "'JetBrains Mono', monospace",

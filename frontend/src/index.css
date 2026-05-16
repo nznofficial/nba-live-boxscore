@@ -132,6 +132,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Mobile */
 @media (max-width: 768px) {
-  .theme-bar { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
   .quarter-strip-wrap { overflow-x: auto; }
 }
+
+/* Hide theme bar scrollbar globally — scrollable but invisible */
+.theme-bar::-webkit-scrollbar { display: none; }
+.theme-bar { -ms-overflow-style: none; scrollbar-width: none; }
